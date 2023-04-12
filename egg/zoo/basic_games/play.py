@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 import egg.core as core
-from egg.core import Callback, Interaction, PrintValidationEvents
+from egg.core import Callback, Interaction, PrintValidationEvents, TopographicSimilarity, Disent
 from egg.zoo.basic_games.architectures import DiscriReceiver, RecoReceiver, Sender
 from egg.zoo.basic_games.data_readers import AttValDiscriDataset, AttValRecoDataset
 
@@ -305,6 +305,17 @@ def main(params):
             + [
                 core.ConsoleLogger(print_train_loss=True, as_json=True),
                 core.PrintValidationEvents(n_epochs=opts.n_epochs),
+                core.TopographicSimilarity(sender_input_distance_fn="hamming",
+                                         message_distance_fn="edit",
+                                         compute_topsim_train_set=True,
+                                         compute_topsim_test_set=True,
+                                         is_gumbel=False),
+                core.Disent(is_gumbel=False,
+                          compute_posdis=True,
+                          compute_bosdis=True,
+                          vocab_size=opts.vocab_size,
+                          print_train=True,
+                          print_test=True)
             ],
         )
     else:
