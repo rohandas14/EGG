@@ -315,7 +315,8 @@ def main(params):
                           compute_bosdis=True,
                           vocab_size=opts.vocab_size,
                           print_train=True,
-                          print_test=True)
+                          print_test=True),
+                core.EarlyStopperAccuracy(threshold=1.0)
             ],
         )
     else:
