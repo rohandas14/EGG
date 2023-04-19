@@ -304,7 +304,7 @@ def main(params):
             callbacks=callbacks
             + [
                 core.ConsoleLogger(print_train_loss=True, as_json=True),
-                core.PrintValidationEvents(n_epochs=opts.n_epochs),
+                core.PrintValidationEvents(n_epochs=opts.n_epochs, n_attributes=opts.n_attributes, n_values=opts.n_values),
                 core.TopographicSimilarity(sender_input_distance_fn="hamming",
                                          message_distance_fn="edit",
                                          compute_topsim_train_set=True,

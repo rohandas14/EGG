@@ -326,9 +326,11 @@ class Disent(Callback):
 # These data are stored in an Interaction object (see interaction.py
 # under core), that logs various data about each game data point.
 class PrintValidationEvents(Callback):
-    def __init__(self, n_epochs):
+    def __init__(self, n_epochs, n_attributes, n_values):
         super().__init__()
         self.n_epochs = n_epochs
+        self.n_attributes = n_attributes
+        self.n_values = n_values
         self.log_msg_dict = {}
 
     @staticmethod
@@ -343,14 +345,18 @@ class PrintValidationEvents(Callback):
         print([m.tolist() for m in logs.receiver_output], sep="\n")
 
     # here is where we make sure we are printing the validation set (on_validation_end, not on_epoch_end)
-    def on_validation_end(self, _loss, logs: Interaction, epoch: int):
-        epoch_log = {'inputs': [m.tolist() for m in logs.sender_input]}
+    def on_validation_end(self, _loss, logs: Interaction, epoch: int) :
+        epoch_log = {'input_labels': [m.tolist() for m in logs.labels]}
 
         receiver_output_mod = []
+        receiver_output_labels = []
         for output in logs.receiver_output:
-            output_mod = [1 if val > 0 else 0 for val in output]
-            receiver_output_mod.append(output_mod)
-        epoch_log['outputs'] = receiver_output_mod
+            output = output.tolist()
+            split_output_mod = [output[i:i + self.n_values] for i in range(0, len(output), self.n_values)]
+            assert len(split_output_mod) == self.n_attributes
+            labels = [attr.index(max(attr)) for attr in split_output_mod]
+            receiver_output_labels.append(labels)
+        epoch_log['output_labels'] = receiver_output_labels
 
         self.log_msg_dict[epoch] = epoch_log
 
