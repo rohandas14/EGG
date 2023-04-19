@@ -299,10 +299,10 @@ class Disent(Callback):
         message = logs.message.argmax(dim=-1) if self.is_gumbel else logs.message
 
         posdis = (
-            self.disent(logs.sender_input, message) if self.compute_posdis else None
+            self.posdis(logs.sender_input, message) if self.compute_posdis else None
         )
         bosdis = (
-            self.disent(logs.sender_input, message, self.vocab_size)
+            self.bosdis(logs.sender_input, message, self.vocab_size)
             if self.compute_bosdis
             else None
         )
