@@ -329,6 +329,7 @@ class PrintValidationEvents(Callback):
     def __init__(self, n_epochs):
         super().__init__()
         self.n_epochs = n_epochs
+        self.log_msg_dict = {}
 
     @staticmethod
     def print_events(logs: Interaction):
@@ -343,9 +344,21 @@ class PrintValidationEvents(Callback):
 
     # here is where we make sure we are printing the validation set (on_validation_end, not on_epoch_end)
     def on_validation_end(self, _loss, logs: Interaction, epoch: int):
+        epoch_log = {'inputs': [m.tolist() for m in logs.sender_input]}
+
+        receiver_output_mod = []
+        for output in logs.receiver_output:
+            output_mod = [1 if val > 0 else 0 for val in output]
+            receiver_output_mod.append(output_mod)
+        epoch_log['outputs'] = receiver_output_mod
+
+        self.log_msg_dict[epoch] = epoch_log
+
         # here is where we check that we are at the last epoch
         if epoch == self.n_epochs:
             self.print_events(logs)
+            with open('result.json', 'w+') as fp:
+                json.dump(self.log_msg_dict, fp)
 
     # same behaviour if we reached early stopping
     def on_early_stopping(self, _train_loss, _train_logs, epoch, _test_loss, test_logs):
