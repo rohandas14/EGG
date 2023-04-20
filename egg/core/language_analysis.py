@@ -144,6 +144,7 @@ class TopographicSimilarity(Callback):
         compute_topsim_train_set: bool = False,
         compute_topsim_test_set: bool = True,
         is_gumbel: bool = False,
+        dump_file: str = "result.json"
     ):
 
         self.sender_input_distance_fn = sender_input_distance_fn
@@ -154,6 +155,7 @@ class TopographicSimilarity(Callback):
         assert compute_topsim_train_set or compute_topsim_test_set
 
         self.is_gumbel = is_gumbel
+        self.dump_file = dump_file
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
         if self.compute_topsim_train_set:
@@ -209,7 +211,7 @@ class TopographicSimilarity(Callback):
 
         topsim = self.compute_topsim(sender_input, messages, self.sender_input_distance_fn, self.message_distance_fn)
 
-        json_file = open("result.json", "r")
+        json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         if mode == "train":
@@ -217,7 +219,7 @@ class TopographicSimilarity(Callback):
         else:
             epoch_log['test_topsim'] = topsim
         json_obj[str(epoch)] = epoch_log
-        with open('result.json', 'w') as fp:
+        with open(self.dump_file, 'w') as fp:
             json.dump(json_obj, fp)
 
         output = json.dumps(dict(topsim=topsim, mode=mode, epoch=epoch))
@@ -270,6 +272,7 @@ class Disent(Callback):
         vocab_size: int = 0,
         print_train: bool = False,
         print_test: bool = True,
+        dump_file: str = "result.json"
     ):
         super().__init__()
         assert (
@@ -290,6 +293,7 @@ class Disent(Callback):
 
         self.print_train = print_train
         self.print_test = print_test
+        self.dump_file = dump_file
 
     @staticmethod
     def bosdis(
@@ -318,7 +322,7 @@ class Disent(Callback):
             else None
         )
 
-        json_file = open("result.json", "r")
+        json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         if tag == "train":
@@ -328,7 +332,7 @@ class Disent(Callback):
             epoch_log['test_posdis'] = posdis
             epoch_log['test_bosdis'] = bosdis
         json_obj[str(epoch)] = epoch_log
-        with open('result.json', 'w') as fp:
+        with open(self.dump_file, 'w') as fp:
             json.dump(json_obj, fp)
 
         output = json.dumps(dict(posdis=posdis, bosdis=bosdis, mode=tag, epoch=epoch))
@@ -350,11 +354,12 @@ class Disent(Callback):
 # These data are stored in an Interaction object (see interaction.py
 # under core), that logs various data about each game data point.
 class PrintValidationEvents(Callback):
-    def __init__(self, n_epochs, n_attributes, n_values):
+    def __init__(self, n_epochs, n_attributes, n_values, dump_file: str = "result.json"):
         super().__init__()
         self.n_epochs = n_epochs
         self.n_attributes = n_attributes
         self.n_values = n_values
+        self.dump_file = dump_file
 
     @staticmethod
     def print_events(logs: Interaction):
@@ -369,7 +374,7 @@ class PrintValidationEvents(Callback):
 
     # here is where we make sure we are printing the validation set (on_validation_end, not on_epoch_end)
     def on_validation_end(self, _loss, logs: Interaction, epoch: int):
-        json_file = open("result.json", "r")
+        json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['input_labels'] = [m.tolist() for m in logs.labels]
@@ -383,7 +388,7 @@ class PrintValidationEvents(Callback):
         epoch_log['output_labels'] = receiver_output_labels
 
         json_obj[str(epoch)] = epoch_log
-        with open('result.json', 'w') as fp:
+        with open(self.dump_file, 'w') as fp:
             json.dump(json_obj, fp)
         # here is where we check that we are at the last epoch
         if epoch == self.n_epochs:

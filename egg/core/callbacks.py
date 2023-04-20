@@ -66,9 +66,10 @@ class Callback:
 
 
 class ConsoleLogger(Callback):
-    def __init__(self, print_train_loss=False, as_json=False):
+    def __init__(self, print_train_loss=False, as_json=False, dump_file="result.json"):
         self.print_train_loss = print_train_loss
         self.as_json = as_json
+        self.dump_file = dump_file
 
     def aggregate_print(self, loss: float, logs: Interaction, mode: str, epoch: int):
         dump = dict(loss=loss)
@@ -86,13 +87,13 @@ class ConsoleLogger(Callback):
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
         self.aggregate_print(loss, logs, "test", epoch)
 
-        json_file = open("result.json", "r")
+        json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['test_loss'] = loss
         epoch_log['test_acc'] = logs.aux['acc'].mean().item()
         json_obj[str(epoch)] = epoch_log
-        with open('result.json', 'w') as fp:
+        with open(self.dump_file, 'w') as fp:
             json.dump(json_obj, fp)
 
 
@@ -100,7 +101,7 @@ class ConsoleLogger(Callback):
         if self.print_train_loss:
             self.aggregate_print(loss, logs, "train", epoch)
 
-        json_file = open("result.json", "r")
+        json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['train_loss'] = loss

@@ -116,6 +116,13 @@ def get_params(params):
         action="store_true",
         help="If this flag is passed, at the end of training the script prints the input validation data, the corresponding messages produced by the Sender, and the output probabilities produced by the Receiver (default: do not print)",
     )
+
+    parser.add_argument(
+        "--dump_file",
+        type=str,
+        default="result.json",
+        help="File name for results dump, must be a .json file",
+    )
     args = core.init(parser, params)
     return args
 
@@ -127,7 +134,7 @@ def main(params):
     print(opts, flush=True)
 
     logs_dict = dict.fromkeys(range(1, opts.n_epochs + 1), {})
-    with open('result.json', 'w+') as fp:
+    with open(opts.dump_file, 'w+') as fp:
         json.dump(logs_dict, fp)
 
     # the following if statement controls aspects specific to the two game tasks: loss, input data and architecture of the Receiver
@@ -307,19 +314,21 @@ def main(params):
             validation_data=test_loader,
             callbacks=callbacks
             + [
-                core.ConsoleLogger(print_train_loss=True, as_json=True),
-                core.PrintValidationEvents(n_epochs=opts.n_epochs, n_attributes=opts.n_attributes, n_values=opts.n_values),
+                core.ConsoleLogger(print_train_loss=True, as_json=True, dump_file=opts.dump_file),
+                core.PrintValidationEvents(n_epochs=opts.n_epochs, n_attributes=opts.n_attributes, n_values=opts.n_values, dump_file=opts.dump_file),
                 core.TopographicSimilarity(sender_input_distance_fn="hamming",
                                          message_distance_fn="edit",
                                          compute_topsim_train_set=True,
                                          compute_topsim_test_set=True,
-                                         is_gumbel=False),
+                                         is_gumbel=False,
+                                         dump_file=opts.dump_file),
                 core.Disent(is_gumbel=False,
                           compute_posdis=True,
                           compute_bosdis=True,
                           vocab_size=opts.vocab_size,
                           print_train=True,
-                          print_test=True),
+                          print_test=True,
+                          dump_file=opts.dump_file),
                 core.EarlyStopperAccuracy(threshold=1.0)
             ],
         )
