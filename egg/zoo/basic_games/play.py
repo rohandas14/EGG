@@ -5,7 +5,7 @@
 
 import argparse
 
-import numpy as np
+import json
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -125,6 +125,10 @@ def main(params):
     if opts.validation_batch_size == 0:
         opts.validation_batch_size = opts.batch_size
     print(opts, flush=True)
+
+    logs_dict = dict.fromkeys(range(1, opts.n_epochs + 1), {})
+    with open('result.json', 'w+') as fp:
+        json.dump(logs_dict, fp)
 
     # the following if statement controls aspects specific to the two game tasks: loss, input data and architecture of the Receiver
     # (the Sender is identical in both cases, mapping a single input attribute-value vector to a variable-length message)

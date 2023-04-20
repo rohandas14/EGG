@@ -86,10 +86,28 @@ class ConsoleLogger(Callback):
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
         self.aggregate_print(loss, logs, "test", epoch)
 
+        json_file = open("result.json", "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        epoch_log['test_loss'] = loss
+        epoch_log['test_acc'] = logs.aux['acc'].mean().item()
+        json_obj[str(epoch)] = epoch_log
+        with open('result.json', 'w') as fp:
+            json.dump(json_obj, fp)
+
+
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
         if self.print_train_loss:
             self.aggregate_print(loss, logs, "train", epoch)
 
+        json_file = open("result.json", "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        epoch_log['train_loss'] = loss
+        epoch_log['train_acc'] = logs.aux['acc'].mean().item()
+        json_obj[str(epoch)] = epoch_log
+        with open('result.json', 'w') as fp:
+            json.dump(json_obj, fp)
 
 class TensorboardLogger(Callback):
     def __init__(self, writer=None):

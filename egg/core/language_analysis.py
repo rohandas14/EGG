@@ -209,6 +209,17 @@ class TopographicSimilarity(Callback):
 
         topsim = self.compute_topsim(sender_input, messages, self.sender_input_distance_fn, self.message_distance_fn)
 
+        json_file = open("result.json", "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        if mode == "train":
+            epoch_log['train_topsim'] = topsim
+        else:
+            epoch_log['test_topsim'] = topsim
+        json_obj[str(epoch)] = epoch_log
+        with open('result.json', 'w') as fp:
+            json.dump(json_obj, fp)
+
         output = json.dumps(dict(topsim=topsim, mode=mode, epoch=epoch))
         print(output, flush=True)
 
@@ -307,6 +318,19 @@ class Disent(Callback):
             else None
         )
 
+        json_file = open("result.json", "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        if tag == "train":
+            epoch_log['train_posdis'] = posdis
+            epoch_log['train_bosdis'] = bosdis
+        else:
+            epoch_log['test_posdis'] = posdis
+            epoch_log['test_bosdis'] = bosdis
+        json_obj[str(epoch)] = epoch_log
+        with open('result.json', 'w') as fp:
+            json.dump(json_obj, fp)
+
         output = json.dumps(dict(posdis=posdis, bosdis=bosdis, mode=tag, epoch=epoch))
         print(output, flush=True)
 
@@ -331,7 +355,6 @@ class PrintValidationEvents(Callback):
         self.n_epochs = n_epochs
         self.n_attributes = n_attributes
         self.n_values = n_values
-        self.log_msg_dict = {}
 
     @staticmethod
     def print_events(logs: Interaction):
@@ -345,10 +368,11 @@ class PrintValidationEvents(Callback):
         print([m.tolist() for m in logs.receiver_output], sep="\n")
 
     # here is where we make sure we are printing the validation set (on_validation_end, not on_epoch_end)
-    def on_validation_end(self, _loss, logs: Interaction, epoch: int) :
-        epoch_log = {'input_labels': [m.tolist() for m in logs.labels]}
-
-        receiver_output_mod = []
+    def on_validation_end(self, _loss, logs: Interaction, epoch: int):
+        json_file = open("result.json", "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        epoch_log['input_labels'] = [m.tolist() for m in logs.labels]
         receiver_output_labels = []
         for output in logs.receiver_output:
             output = output.tolist()
@@ -358,13 +382,12 @@ class PrintValidationEvents(Callback):
             receiver_output_labels.append(labels)
         epoch_log['output_labels'] = receiver_output_labels
 
-        self.log_msg_dict[epoch] = epoch_log
-
+        json_obj[str(epoch)] = epoch_log
+        with open('result.json', 'w') as fp:
+            json.dump(json_obj, fp)
         # here is where we check that we are at the last epoch
         if epoch == self.n_epochs:
             self.print_events(logs)
-            with open('result.json', 'w+') as fp:
-                json.dump(self.log_msg_dict, fp)
 
     # same behaviour if we reached early stopping
     def on_early_stopping(self, _train_loss, _train_logs, epoch, _test_loss, test_logs):
