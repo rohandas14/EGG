@@ -1,0 +1,21 @@
+{
+  "mode": ["rf"],
+  "train_data": ["out_train_v=4_m=4"],
+  "validation_data": ["out_valid_v=4_m=4"],
+  "n_attributes": [2, 4, 8],
+  "n_values": [4],
+  "n_epochs": [5000],
+  "batch_size": [65536],
+  "validation_batch_size": [65536],
+  "max_len": [2, 4, 8],
+  "vocab_size": [8, 16],
+  "sender_hidden": [256],
+  "receiver_hidden": [512],
+  "sender_embedding": [5],
+  "receiver_embedding": [30],
+  "receiver_cell": ["gru"],
+  "sender_cell": ["gru"],
+  "lr": [0.01, 0.005],
+  "random_seed": [42],
+  "print_validation_events" : [true]
+}

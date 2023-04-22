@@ -138,13 +138,13 @@ class TopographicSimilarity(Callback):
     """
 
     def __init__(
-        self,
-        sender_input_distance_fn: Union[str, Callable] = "hamming",
-        message_distance_fn: Union[str, Callable] = "edit",
-        compute_topsim_train_set: bool = False,
-        compute_topsim_test_set: bool = True,
-        is_gumbel: bool = False,
-        dump_file: str = "result.json"
+            self,
+            sender_input_distance_fn: Union[str, Callable] = "hamming",
+            message_distance_fn: Union[str, Callable] = "edit",
+            compute_topsim_train_set: bool = False,
+            compute_topsim_test_set: bool = True,
+            is_gumbel: bool = False,
+            dump_file: str = "result.json"
     ):
 
         self.sender_input_distance_fn = sender_input_distance_fn
@@ -167,10 +167,10 @@ class TopographicSimilarity(Callback):
 
     @staticmethod
     def compute_topsim(
-        meanings: torch.Tensor,
-        messages: torch.Tensor,
-        meaning_distance_fn: Union[str, Callable] = "hamming",
-        message_distance_fn: Union[str, Callable] = "edit",
+            meanings: torch.Tensor,
+            messages: torch.Tensor,
+            meaning_distance_fn: Union[str, Callable] = "hamming",
+            message_distance_fn: Union[str, Callable] = "edit",
     ) -> float:
 
         distances = {
@@ -193,7 +193,7 @@ class TopographicSimilarity(Callback):
         )
 
         assert (
-            meaning_distance_fn and message_distance_fn
+                meaning_distance_fn and message_distance_fn
         ), f"Cannot recognize {meaning_distance_fn} \
             or {message_distance_fn} distances"
 
@@ -265,24 +265,24 @@ class Disent(Callback):
     """
 
     def __init__(
-        self,
-        is_gumbel: bool,
-        compute_posdis: bool = True,
-        compute_bosdis: bool = False,
-        vocab_size: int = 0,
-        print_train: bool = False,
-        print_test: bool = True,
-        dump_file: str = "result.json"
+            self,
+            is_gumbel: bool,
+            compute_posdis: bool = True,
+            compute_bosdis: bool = False,
+            vocab_size: int = 0,
+            print_train: bool = False,
+            print_test: bool = True,
+            dump_file: str = "result.json"
     ):
         super().__init__()
         assert (
-            print_train or print_test
+                print_train or print_test
         ), "At least one of `print_train` and `print_train` must be set"
         assert (
-            compute_posdis or compute_bosdis
+                compute_posdis or compute_bosdis
         ), "At least one of `compute_posdis` and `compute_bosdis` must be set"
         assert (
-            not compute_bosdis or vocab_size > 0
+                not compute_bosdis or vocab_size > 0
         ), "To compute a positive vocab_size must be specifed"
 
         self.vocab_size = vocab_size
@@ -297,7 +297,7 @@ class Disent(Callback):
 
     @staticmethod
     def bosdis(
-        attributes: torch.Tensor, messages: torch.Tensor, vocab_size: int
+            attributes: torch.Tensor, messages: torch.Tensor, vocab_size: int
     ) -> float:
         batch_size = messages.size(0)
         histogram = torch.zeros(batch_size, vocab_size, device=messages.device)
@@ -377,15 +377,37 @@ class PrintValidationEvents(Callback):
         json_file = open(self.dump_file, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
-        epoch_log['input_labels'] = [m.tolist() for m in logs.labels]
+        epoch_log['val_input_labels'] = [m.tolist() for m in logs.labels]
         receiver_output_labels = []
         for output in logs.receiver_output:
             output = output.tolist()
             split_output_mod = [output[i:i + self.n_values] for i in range(0, len(output), self.n_values)]
-            assert len(split_output_mod) == self.n_attributes
+            # assert len(split_output_mod) == self.n_attributes
             labels = [attr.index(max(attr)) for attr in split_output_mod]
             receiver_output_labels.append(labels)
-        epoch_log['output_labels'] = receiver_output_labels
+        epoch_log['val_output_labels'] = receiver_output_labels
+
+        json_obj[str(epoch)] = epoch_log
+        with open(self.dump_file, 'w') as fp:
+            json.dump(json_obj, fp)
+        # here is where we check that we are at the last epoch
+        if epoch == self.n_epochs:
+            self.print_events(logs)
+
+    def on_epoch_end(self, _loss, logs: Interaction, epoch: int):
+        json_file = open(self.dump_file, "r")
+        json_obj = json.load(json_file)
+        epoch_log = json_obj[str(epoch)]
+        epoch_log['train_input_labels'] = [m.tolist() for m in logs.labels]
+        epoch_log['messages'] = [m.tolist() for m in logs.message]
+        receiver_output_labels = []
+        for output in logs.receiver_output:
+            output = output.tolist()
+            split_output_mod = [output[i:i + self.n_values] for i in range(0, len(output), self.n_values)]
+            # assert len(split_output_mod) == self.n_attributes
+            labels = [attr.index(max(attr)) for attr in split_output_mod]
+            receiver_output_labels.append(labels)
+        epoch_log['train_output_labels'] = receiver_output_labels
 
         json_obj[str(epoch)] = epoch_log
         with open(self.dump_file, 'w') as fp:

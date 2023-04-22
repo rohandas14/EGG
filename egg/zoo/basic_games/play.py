@@ -133,6 +133,7 @@ def main(params):
         opts.validation_batch_size = opts.batch_size
     print(opts, flush=True)
 
+    opts.dump_file = opts.dump_file + '_' + str(opts.n_attributes) + '_' + str(opts.n_values) + '_' + str(opts.max_len) + '_' + str(opts.vocab_size) + '_' + str(opts.sender_hidden) + '_' + str(opts.receiver_hidden) + '_' + str(opts.mode)
     logs_dict = dict.fromkeys(range(1, opts.n_epochs + 1), {})
     with open(opts.dump_file, 'w+') as fp:
         json.dump(logs_dict, fp)
