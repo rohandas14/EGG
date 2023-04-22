@@ -167,6 +167,10 @@ class TopographicSimilarity(Callback):
             if self.compute_topsim_test_set:
                 self.print_message(logs, "test", epoch)
 
+    def on_early_stopping(self, loss: float, logs: Interaction, epoch: int):
+        self.print_message(logs, "train", epoch)
+        self.print_message(logs, "test", epoch)
+
     @staticmethod
     def compute_topsim(
             meanings: torch.Tensor,
@@ -349,6 +353,10 @@ class Disent(Callback):
         if epoch % 100 == 0:
             if self.print_test:
                 self.print_message(logs, "test", epoch)
+
+    def on_early_stopping(self, loss, logs, epoch):
+        self.print_message(logs, "train", epoch)
+        self.print_message(logs, "test", epoch)
 
 
 # The PrintValidationEvents callback function checks that we are at the
