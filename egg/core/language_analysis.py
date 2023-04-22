@@ -158,12 +158,14 @@ class TopographicSimilarity(Callback):
         self.dump_file = dump_file
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
-        if self.compute_topsim_train_set:
-            self.print_message(logs, "train", epoch)
+        if epoch % 100 == 0:
+            if self.compute_topsim_train_set:
+                self.print_message(logs, "train", epoch)
 
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
-        if self.compute_topsim_test_set:
-            self.print_message(logs, "test", epoch)
+        if epoch % 100 == 0:
+            if self.compute_topsim_test_set:
+                self.print_message(logs, "test", epoch)
 
     @staticmethod
     def compute_topsim(
@@ -339,12 +341,14 @@ class Disent(Callback):
         print(output, flush=True)
 
     def on_epoch_end(self, _loss, logs: Interaction, epoch: int):
-        if self.print_train:
-            self.print_message(logs, "train", epoch)
+        if epoch % 100 == 0:
+            if self.print_train:
+                self.print_message(logs, "train", epoch)
 
     def on_validation_end(self, loss, logs, epoch):
-        if self.print_test:
-            self.print_message(logs, "test", epoch)
+        if epoch % 100 == 0:
+            if self.print_test:
+                self.print_message(logs, "test", epoch)
 
 
 # The PrintValidationEvents callback function checks that we are at the
