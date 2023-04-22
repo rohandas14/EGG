@@ -330,7 +330,7 @@ def main(params):
                           print_train=True,
                           print_test=True,
                           dump_file=opts.dump_file),
-                core.EarlyStopperAccuracy(threshold=1.0)
+                core.EarlyStopperAccuracy(threshold=1.0, validation=False)
             ],
         )
     else:
