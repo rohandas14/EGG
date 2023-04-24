@@ -158,12 +158,12 @@ class TopographicSimilarity(Callback):
         self.dump_file = dump_file
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
-        if epoch % 100 == 0:
+        if epoch % 50 == 0:
             if self.compute_topsim_train_set:
                 self.print_message(logs, "train", epoch)
 
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
-        if epoch % 100 == 0:
+        if epoch % 50 == 0:
             if self.compute_topsim_test_set:
                 self.print_message(logs, "test", epoch)
 
@@ -217,7 +217,11 @@ class TopographicSimilarity(Callback):
 
         topsim = self.compute_topsim(sender_input, messages, self.sender_input_distance_fn, self.message_distance_fn)
 
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         if mode == "train":
@@ -225,7 +229,7 @@ class TopographicSimilarity(Callback):
         else:
             epoch_log['test_topsim'] = topsim
         json_obj[str(epoch)] = epoch_log
-        with open(self.dump_file, 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
 
         output = json.dumps(dict(topsim=topsim, mode=mode, epoch=epoch))
@@ -328,7 +332,11 @@ class Disent(Callback):
             else None
         )
 
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         if tag == "train":
@@ -338,19 +346,19 @@ class Disent(Callback):
             epoch_log['test_posdis'] = posdis
             epoch_log['test_bosdis'] = bosdis
         json_obj[str(epoch)] = epoch_log
-        with open(self.dump_file, 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
 
         output = json.dumps(dict(posdis=posdis, bosdis=bosdis, mode=tag, epoch=epoch))
         print(output, flush=True)
 
     def on_epoch_end(self, _loss, logs: Interaction, epoch: int):
-        if epoch % 100 == 0:
+        if epoch % 50 == 0:
             if self.print_train:
                 self.print_message(logs, "train", epoch)
 
     def on_validation_end(self, loss, logs, epoch):
-        if epoch % 100 == 0:
+        if epoch % 50 == 0:
             if self.print_test:
                 self.print_message(logs, "test", epoch)
 
@@ -386,7 +394,11 @@ class PrintValidationEvents(Callback):
 
     # here is where we make sure we are printing the validation set (on_validation_end, not on_epoch_end)
     def on_validation_end(self, _loss, logs: Interaction, epoch: int):
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['val_input_labels'] = [m.tolist() for m in logs.labels]
@@ -400,14 +412,18 @@ class PrintValidationEvents(Callback):
         epoch_log['val_output_labels'] = receiver_output_labels
 
         json_obj[str(epoch)] = epoch_log
-        with open(self.dump_file, 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
         # here is where we check that we are at the last epoch
         if epoch == self.n_epochs:
             self.print_events(logs)
 
     def on_epoch_end(self, _loss, logs: Interaction, epoch: int):
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['train_input_labels'] = [m.tolist() for m in logs.labels]
@@ -422,7 +438,7 @@ class PrintValidationEvents(Callback):
         epoch_log['train_output_labels'] = receiver_output_labels
 
         json_obj[str(epoch)] = epoch_log
-        with open(self.dump_file, 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
         # here is where we check that we are at the last epoch
         if epoch == self.n_epochs:

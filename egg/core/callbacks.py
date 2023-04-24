@@ -38,12 +38,12 @@ class Callback:
         pass
 
     def on_early_stopping(
-        self,
-        train_loss: float,
-        train_logs: Interaction,
-        epoch: int,
-        test_loss: float = None,
-        test_logs: Interaction = None,
+            self,
+            train_loss: float,
+            train_logs: Interaction,
+            epoch: int,
+            test_loss: float = None,
+            test_logs: Interaction = None,
     ):
         pass
 
@@ -60,7 +60,7 @@ class Callback:
         pass
 
     def on_batch_end(
-        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
         pass
 
@@ -87,28 +87,36 @@ class ConsoleLogger(Callback):
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
         self.aggregate_print(loss, logs, "test", epoch)
 
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['test_loss'] = loss
         epoch_log['test_acc'] = logs.aux['acc'].mean().item()
         json_obj[str(epoch)] = epoch_log
-        with open(self.dump_file, 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
-
 
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
         if self.print_train_loss:
             self.aggregate_print(loss, logs, "train", epoch)
 
-        json_file = open(self.dump_file, "r")
+        idx = epoch // 50
+        if epoch % 50 != 0:
+            idx += 1
+        filename = self.dump_file + '_' + str(50 * idx) + '.json'
+        json_file = open(filename, "r")
         json_obj = json.load(json_file)
         epoch_log = json_obj[str(epoch)]
         epoch_log['train_loss'] = loss
         epoch_log['train_acc'] = logs.aux['acc'].mean().item()
         json_obj[str(epoch)] = epoch_log
-        with open('result.json', 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(json_obj, fp)
+
 
 class TensorboardLogger(Callback):
     def __init__(self, writer=None):
@@ -137,11 +145,11 @@ class TensorboardLogger(Callback):
 
 class WandbLogger(Callback):
     def __init__(
-        self,
-        opts: Union[argparse.ArgumentParser, Dict, str, None] = None,
-        project: Optional[str] = None,
-        run_id: Optional[str] = None,
-        **kwargs,
+            self,
+            opts: Union[argparse.ArgumentParser, Dict, str, None] = None,
+            project: Optional[str] = None,
+            run_id: Optional[str] = None,
+            **kwargs,
     ):
         # This callback logs to wandb the interaction as they are stored in the leader process.
         # When interactions are not aggregated in a multigpu run, each process will store
@@ -162,7 +170,7 @@ class WandbLogger(Callback):
         wandb.watch(self.trainer.game, log="all")
 
     def on_batch_end(
-        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
         if is_training and self.trainer.distributed_context.is_leader:
             self.log_to_wandb({"batch_loss": loss}, commit=True)
@@ -205,11 +213,11 @@ class Checkpoint(NamedTuple):
 
 class CheckpointSaver(Callback):
     def __init__(
-        self,
-        checkpoint_path: Union[str, pathlib.Path],
-        checkpoint_freq: int = 1,
-        prefix: str = "",
-        max_checkpoints: int = sys.maxsize,
+            self,
+            checkpoint_path: Union[str, pathlib.Path],
+            checkpoint_freq: int = 1,
+            prefix: str = "",
+            max_checkpoints: int = sys.maxsize,
     ):
         """Saves a checkpoint file for training.
         :param checkpoint_path:  path to checkpoint directory, will be created if not present
@@ -287,11 +295,11 @@ class CheckpointSaver(Callback):
 
 class InteractionSaver(Callback):
     def __init__(
-        self,
-        train_epochs: Optional[List[int]] = None,
-        test_epochs: Optional[List[int]] = None,
-        checkpoint_dir: str = "",
-        aggregated_interaction: bool = True,
+            self,
+            train_epochs: Optional[List[int]] = None,
+            test_epochs: Optional[List[int]] = None,
+            checkpoint_dir: str = "",
+            aggregated_interaction: bool = True,
     ):
         if isinstance(train_epochs, list):
             assert all(map(lambda x: x > 0, train_epochs))
@@ -313,11 +321,11 @@ class InteractionSaver(Callback):
 
     @staticmethod
     def dump_interactions(
-        logs: Interaction,
-        mode: str,
-        epoch: int,
-        rank: int,
-        dump_dir: str = "./interactions",
+            logs: Interaction,
+            mode: str,
+            epoch: int,
+            rank: int,
+            dump_dir: str = "./interactions",
     ):
         dump_dir = pathlib.Path(dump_dir) / mode / f"epoch_{epoch}"
         dump_dir.mkdir(exist_ok=True, parents=True)
@@ -326,8 +334,8 @@ class InteractionSaver(Callback):
     def on_validation_end(self, loss: float, logs: Interaction, epoch: int):
         if epoch in self.test_epochs:
             if (
-                not self.aggregated_interaction
-                or self.trainer.distributed_context.is_leader
+                    not self.aggregated_interaction
+                    or self.trainer.distributed_context.is_leader
             ):
                 rank = self.trainer.distributed_context.rank
                 self.dump_interactions(
@@ -337,8 +345,8 @@ class InteractionSaver(Callback):
     def on_epoch_end(self, loss: float, logs: Interaction, epoch: int):
         if epoch in self.train_epochs:
             if (
-                not self.aggregated_interaction
-                or self.trainer.distributed_context.is_leader
+                    not self.aggregated_interaction
+                    or self.trainer.distributed_context.is_leader
             ):
                 rank = self.trainer.distributed_context.rank
                 self.dump_interactions(logs, "train", epoch, rank, self.checkpoint_dir)
@@ -429,11 +437,11 @@ class ProgressBarLogger(Callback):
     """
 
     def __init__(
-        self,
-        n_epochs: int,
-        train_data_len: int = 0,
-        test_data_len: int = 0,
-        use_info_table: bool = True,
+            self,
+            n_epochs: int,
+            train_data_len: int = 0,
+            test_data_len: int = 0,
+            use_info_table: bool = True,
     ):
         """
         :param n_epochs: total number of epochs
@@ -568,7 +576,7 @@ class ProgressBarLogger(Callback):
         self.progress.stop()
 
     def on_batch_end(
-        self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
+            self, logs: Interaction, loss: float, batch_id: int, is_training: bool = True
     ):
         if is_training:
             self.progress.update(self.train_p, refresh=True, advance=1)

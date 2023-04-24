@@ -15,6 +15,8 @@ from egg.core import Callback, Interaction, PrintValidationEvents, TopographicSi
 from egg.zoo.basic_games.architectures import DiscriReceiver, RecoReceiver, Sender
 from egg.zoo.basic_games.data_readers import AttValDiscriDataset, AttValRecoDataset
 
+import os, uuid
+
 
 # the following section specifies parameters that are specific to our games: we will also inherit the
 # standard EGG parameters from https://github.com/facebookresearch/EGG/blob/main/egg/core/util.py
@@ -120,7 +122,7 @@ def get_params(params):
     parser.add_argument(
         "--dump_file",
         type=str,
-        default="result.json",
+        default="result",
         help="File name for results dump, must be a .json file",
     )
     args = core.init(parser, params)
@@ -132,11 +134,14 @@ def main(params):
     if opts.validation_batch_size == 0:
         opts.validation_batch_size = opts.batch_size
     print(opts, flush=True)
-
-    opts.dump_file = opts.dump_file + '_' + str(opts.n_attributes) + '_' + str(opts.n_values) + '_' + str(opts.max_len) + '_' + str(opts.vocab_size) + '_' + str(opts.sender_hidden) + '_' + str(opts.receiver_hidden) + '_' + str(opts.mode)
-    logs_dict = dict.fromkeys(range(1, opts.n_epochs + 1), {})
-    with open(opts.dump_file, 'w+') as fp:
-        json.dump(logs_dict, fp)
+    dir_name = str(uuid.uuid4())
+    os.makedirs(dir_name)
+    opts.dump_file = dir_name + '/' + opts.dump_file + '_' + str(opts.n_attributes) + '_' + str(opts.max_len) + '_' + str(opts.vocab_size)
+    for i in range(50, opts.n_epochs+100, 50):
+        tempfile = opts.dump_file + '_' + str(i) + str('.json')
+        logs_dict = dict.fromkeys(range(i - 49, i + 1), {})
+        with open(tempfile, 'w+') as fp:
+            json.dump(logs_dict, fp)
 
     # the following if statement controls aspects specific to the two game tasks: loss, input data and architecture of the Receiver
     # (the Sender is identical in both cases, mapping a single input attribute-value vector to a variable-length message)
